@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+/* ================= GLOBAL ================= */
+
+body {
+    background: #f5f6f8;
+}
+
+body {
+    font-family: "Inter", sans-serif;
+}
+
+.resume-preview {
+    all: unset;
+}
+
+.resume-preview * {
+    all: revert;
+}
+
+.ck-editor__editable {
+    min-height: 1100px;
+    padding: 24px 32px;
+    background: white;
+}
+
+.ck-editor__editable_inline {
+    box-shadow: 0 0 0 1px #e5e7eb;
+}
+
+.ck.ck-editor {
+    width: 100%;
+}
+
+.ck-content {
+    font-family: initial;
+}
+
+.editorWrapper {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.editorScrollArea {
+    flex: 1;
+    overflow-y: auto;
+}

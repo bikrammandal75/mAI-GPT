@@ -1,0 +1,5 @@
+node_modules
+/.vs/mAiGPT/CopilotIndices/17.14.827.52834
+/.vs/mAiGPT/FileContentIndex
+*.sqlite-journal
+/.vs/slnx.sqlite

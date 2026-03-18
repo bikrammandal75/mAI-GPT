@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/icon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <title>mAI</title>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <!-- ✅ Google Maps JS API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBFAN6l5DUfueyO4Tfp7OyB3oEPP0OZ9l4&libraries=places"
+        async defer></script>
+
+    <!-- ✅ Your React App -->
+    <script type="module" src="/src/main.jsx"></script>
+
+
+    <!-- ✅ Facebook SDK Initialization -->
+    <script>
+        window.fbAsyncInit = function () {
+            FB.init({
+                appId: "1184308252852036",
+                cookie: true,
+                xfbml: true,
+                version: "v16.0",
+            });
+
+            FB.AppEvents.logPageView();
+        };
+
+        (function (d, s, id) {
+            var js,
+                fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) {
+                return;
+            }
+            js = d.createElement(s);
+            js.id = id;
+            js.src = "https://connect.facebook.net/en_US/sdk.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        })(document, "script", "facebook-jssdk");
+    </script>
+</body>
+
+</html>
