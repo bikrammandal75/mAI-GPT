@@ -19,7 +19,7 @@ const LANGUAGES = [
 
 const Chat = () => {
     Login(); // Ensure login logic runs on component mount
-    const { messages, sendMessage, candidates, showCandidatePanel, showTemplatePanel } = useChat();
+    const { messages, sendMessage, candidates, showCandidatePanel, showTemplatePanel, jobData } = useChat();
     const token = Cookies.get("token");
     const [language, setLanguage] = useState(() => localStorage.getItem("language") || "en");
     const [showDropdown, setShowDropdown] = useState(false);
@@ -52,7 +52,7 @@ const Chat = () => {
                     </div>
 
                     <div className="w-[60%]">
-                        <CandidatePanel candidates={candidates} />
+                        <CandidatePanel candidates={candidates} jobData={jobData} />
                     </div>
                 </>
 

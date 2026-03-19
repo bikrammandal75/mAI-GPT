@@ -197,7 +197,7 @@ const ChatMessage = ({ text, isUser, isNew, chatId, candidates }) => {
             <ReactMarkdown
                 components={{
                     p: ({ node, ...props }) => (
-                        <p className="mb-4 leading-relaxed text-gray-800 dark:text-gray-200 break-words" {...props} />
+                        <p className="leading-relaxed text-gray-800 dark:text-gray-200 break-words" {...props} />
                     ),
                     h1: ({ node, ...props }) => (
                         <h1 className="mt-6 mb-2 text-2xl font-bold text-zinc-900 dark:text-white" {...props} />
@@ -206,10 +206,10 @@ const ChatMessage = ({ text, isUser, isNew, chatId, candidates }) => {
                         <h2 className="mt-4 mb-2 text-xl font-semibold text-zinc-800 dark:text-zinc-100" {...props} />
                     ),
                     ul: ({ node, ...props }) => (
-                        <ul className="mb-4 list-disc pl-5 text-gray-800 dark:text-gray-200" {...props} />
+                        <ul className="list-disc pl-5 text-gray-800 dark:text-gray-200" {...props} />
                     ),
                     ol: ({ node, ...props }) => (
-                        <ol className="mb-4 list-decimal pl-5 text-gray-800 dark:text-gray-200" {...props} />
+                        <ol className="list-decimal pl-5 text-gray-800 dark:text-gray-200" {...props} />
                     ),
                     a: ({ node, ...props }) => (
                         <a
@@ -299,10 +299,10 @@ const ChatMessage = ({ text, isUser, isNew, chatId, candidates }) => {
                                 </div>
                             </div>
                         ) : (
-                            <div className="dark:bg-secondary w-full max-w-full overflow-x-auto break-words break-all rounded-lg px-4 py-1 md:max-w-2xl dark:text-white">
-
+                            <div className="bg-gray-50 text-white px-4 py-2 rounded-2xl rounded-br-md shadow-sm break-words whitespace-pre-wrap">
                                 {renderMarkdownContent()}
                             </div>
+
                         )}
                         {isUser && !isEditing && token && (
                             <span
@@ -316,12 +316,14 @@ const ChatMessage = ({ text, isUser, isNew, chatId, candidates }) => {
                 ) : (
                     <div>
                         <div className="dark:bg-secondary w-fit rounded-lg px-4 py-1 dark:text-white">
-                            {isGenerating ? (
-                                <div className="text-white dark:text-white">{String(displayedText || "")}</div>
 
-                            ) : (
-                                renderMarkdownContent()
-                            )}
+
+                            {/* Message */}
+                            <div className="bg-gray-50 dark:bg-zinc-800 px-4 py-3 rounded-xl text-gray-800 dark:text-gray-100 shadow-sm max-w-full">
+                                {isGenerating
+                                    ? <div>{String(displayedText || "")}</div>
+                                    : renderMarkdownContent()}
+                            </div>
                             {candidates && candidates.length > 0 && (
                                 <div className="mt-4 space-y-2">
 
@@ -376,7 +378,7 @@ const ChatMessage = ({ text, isUser, isNew, chatId, candidates }) => {
                                 )}
                             </div>
                         )}
-                       
+
                     </div>
                 )}
             </motion.div>

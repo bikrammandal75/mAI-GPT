@@ -677,7 +677,8 @@ Is this outreach template okay? You can confirm or ask me to modify it.`,
                 candidates,
                 showCandidatePanel,
                 outreachTemplate,
-                showTemplatePanel
+                showTemplatePanel,
+                jobData
             }}
         >
             {children}
