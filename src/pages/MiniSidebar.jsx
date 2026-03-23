@@ -18,7 +18,7 @@ const MiniSidebar = ({ setIsSidebarOpen }) => {
         ? `${import.meta.env.VITE_DICEBEAR_API}${encodeURIComponent(name)}`
         : "https://github.com/shadcn.png";
     const navigate = useNavigate();
-    const { clearMessages, setChatParam } = useChat();
+    const { clearMessages, setChatParam, setShowCandidatePanel, setShowTemplatePanel } = useChat();
 
     const handleLogout = () => {
         const loadingToast = toast.loading("Logging out...");
@@ -76,7 +76,7 @@ const MiniSidebar = ({ setIsSidebarOpen }) => {
             {/* + New */}
             <button
                 onClick={() =>
-                    startNewChat({ clearMessages, setChatParam, navigate })
+                    startNewChat({ clearMessages, setChatParam, navigate, setShowCandidatePanel, setShowTemplatePanel })
                 }
                 className="mb-4 flex flex-col items-center gap-1 text-xs"
             >

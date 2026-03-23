@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import ChatInput from "../components/chat/ChatInput";
 import ChatContainer from "../components/chat/ChatContainer";
 import { useChat } from "../components/context/ChatContext";
@@ -6,25 +6,39 @@ import Login from "./auth/login";
 import Cookies from "js-cookie";
 import { useRef, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { BiChevronDown } from "react-icons/bi";
 import { useNavigate } from "react-router-dom";
 import WorkspaceOptions from "./WorkspaceOptions";
 import CandidatePanel from "./CandidatePanel";
 import EmailTemplatePanel from "./EmailTemplatePanel";
-
 
 const LANGUAGES = [
     { code: "en", label: "English" },
 ];
 
 const Chat = () => {
-    Login(); // Ensure login logic runs on component mount
-    const { messages, sendMessage, candidates, showCandidatePanel, showTemplatePanel, jobData } = useChat();
+    Login();
+
+    const {
+        messages,
+        sendMessage,
+        candidates,
+        showCandidatePanel,
+        showTemplatePanel,
+        jobData
+    } = useChat();
+
     const token = Cookies.get("token");
-    const [language, setLanguage] = useState(() => localStorage.getItem("language") || "en");
+
+    const [language, setLanguage] = useState(
+        () => localStorage.getItem("language") || "en"
+    );
+
     const [showDropdown, setShowDropdown] = useState(false);
+
     const { t, i18n } = useTranslation();
+
     const languageRef = useRef(null);
+
     const navigate = useNavigate();
 
     const handleNavigateToPolicy = useCallback((route, tab) => {
@@ -38,57 +52,62 @@ const Chat = () => {
         setShowDropdown(false);
     }, [i18n]);
 
-    const currentLangLabel = LANGUAGES.find((l) => l.code === language)?.label || "English";
+    const currentLangLabel =
+        LANGUAGES.find((l) => l.code === language)?.label || "English";
 
     return (
-        <motion.div className="flex h-full w-full">
+        <motion.div className="flex h-full w-full bg-white">
 
             {showCandidatePanel ? (
-
                 <>
-                    <div className="w-[40%]  flex flex-col">
-                        <ChatContainer messages={messages} />
+                    <div className="w-[40%] flex flex-col h-full">
+                        <div className="flex-1 overflow-hidden flex flex-col">
+                            <ChatContainer messages={messages} />
+                        </div>
                         <ChatInput onSendMessage={sendMessage} />
                     </div>
-
-                    <div className="w-[60%]">
-                        <CandidatePanel candidates={candidates} jobData={jobData} />
+                    <div className="w-[60%] h-full">
+                        <CandidatePanel
+                            candidates={candidates}
+                            jobData={jobData}
+                        />
                     </div>
                 </>
-
             ) : showTemplatePanel ? (
-
                 <>
-                    <div className="w-[40%]  flex flex-col">
-                        <ChatContainer messages={messages} />
+                    <div className="w-[40%] flex flex-col h-full">
+                        <div className="flex-1 overflow-hidden flex flex-col">
+                            <ChatContainer messages={messages} />
+                        </div>
                         <ChatInput onSendMessage={sendMessage} />
                     </div>
-
-                    <div className="w-[60%]">
+                    <div className="w-[60%] h-full">
                         <EmailTemplatePanel />
                     </div>
                 </>
 
             ) : (
 
-                <div className="flex flex-col flex-grow">
-
+                <div className="flex flex-col flex-grow h-full">
                     {messages.length === 0 ? (
                         <div className="flex flex-col items-center justify-center flex-grow">
                             <h1 className="text-2xl font-semibold mb-8">
                                 Hi! Feel free to ask.
                             </h1>
-                            <ChatInput onSendMessage={sendMessage} isInitialState />
+                            <ChatInput
+                                onSendMessage={sendMessage}
+                                isInitialState
+                            />
                         </div>
                     ) : (
                         <>
-                            <ChatContainer messages={messages} />
+                            <div className="flex-1 overflow-hidden flex flex-col">
+                                <ChatContainer messages={messages} />
+                            </div>
                             <ChatInput onSendMessage={sendMessage} />
                         </>
                     )}
-
                 </div>
-
             )}
 
         </motion.div>

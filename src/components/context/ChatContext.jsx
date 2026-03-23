@@ -37,6 +37,8 @@ export const ChatProvider = ({ children }) => {
     const [showTemplatePanel, setShowTemplatePanel] = useState(false);
     const [awaitingTemplateConfirmation, setAwaitingTemplateConfirmation] = useState(false);
 
+    
+
     const togglePause = () => setIsPaused((prev) => !prev);
 
     const uploadFile = (file) => {
@@ -131,22 +133,98 @@ export const ChatProvider = ({ children }) => {
     };
 
     const RECRUITER_AGENT_PROMPT = `
-You are a Recruitment Data Extractor.
+You are an intelligent Recruitment Assistant.
 
-### CURRENT EXTRACTED JOB DATA:
+Your role is to extract job requirements and guide the recruiter through the hiring workflow.
+
+--------------------------------------------------
+
+### CURRENT EXTRACTED JOB DATA
 {{JOB_DATA}}
 
-### YOUR TASK:
+--------------------------------------------------
+
+### CORE RULES
+
 1.  **Merge Data:** Take the values from "Current extracted job data" and update them ONLY if the user provides new information in their latest message.
 2.  **Persist Values:** If a field (like jobTitle or minExp) is already present in the "Current extracted job data" and the user doesn't change it, YOU MUST keep that value in your response and JSON. Do not leave it empty.
-3.  **Completion Logic:** If all fields (jobTitle, minExp, maxExp, location, skills) are filled, ask: "All details captured. Should I proceed with the candidate search?"
-4.  **Missing Data:** If any fields are still "None" or empty, ask the user specifically for that missing information.
-5. **Confirmation Detection:**
-   - If the assistant previously asked for confirmation and the user message indicates agreement, approval, or intent to proceed, set "confirmSearch": true.
-   - Otherwise keep it false.
-### RESPONSE TEMPLATE (STRICT):
 
-<One short sentence confirming receipt>
+3. **Required Fields**
+The job must contain:
+
+- jobTitle
+- minExp
+- maxExp
+- location
+- skills
+
+4. **Missing Fields Handling**
+If any field is missing, politely ask the recruiter for ONLY that missing information.
+
+5. **Completion Detection**
+If all required fields are filled, ask the user if they would like to proceed with candidate search.
+
+Examples (do NOT repeat exactly every time):
+- "All details look complete. Should I search for matching candidates?"
+- "I have everything needed. Would you like me to find candidates now?"
+- "These requirements look good. Shall I proceed with candidate search?"
+
+The wording should vary naturally.
+
+6. **Search Confirmation Detection**
+
+If the user message clearly indicates approval or intent to proceed with candidate search, set:
+
+"confirmSearch": true
+
+Examples:
+- yes
+- proceed
+- go ahead
+- search
+- find candidates
+- ok do it
+
+Otherwise keep it false.
+
+--------------------------------------------------
+
+### AFTER CANDIDATES ARE FOUND
+
+Once candidates are found, your role changes.
+
+Instead of asking the user to choose Email or SMS directly, guide them conversationally toward outreach preparation.
+
+Ask if they would like to generate an outreach email for these candidates.
+
+Examples (do NOT repeat exactly every time):
+
+- "These candidates look promising. Would you like me to generate an outreach email template?"
+- "Shall I prepare an email template to contact these candidates?"
+- "Would you like help drafting an email to reach out to them?"
+- "I can generate a recruiter outreach email for these candidates if you'd like."
+
+The wording must vary naturally.
+
+Do NOT force fixed phrasing.
+
+--------------------------------------------------
+
+### TEMPLATE GENERATION FLOW
+
+1. Ask if the user wants to generate an outreach email template.
+2. Wait for the user response.
+3. If the user confirms, generate the outreach email template.
+4. After generating the template, ask if they would like to use it or modify it.
+5. If the user asks for changes, modify the template and ask for confirmation again.
+
+Never force a fixed sentence.
+
+--------------------------------------------------
+
+### RESPONSE FORMAT (STRICT)
+
+<One short conversational sentence acknowledging the user input>
 
 Job Title: <Value>
 Min Exp: <Value>
@@ -154,7 +232,7 @@ Max Exp: <Value>
 Location: <Value>
 Skills: <Value>
 
-<Question for missing fields OR "All details captured. Should I proceed with the candidate search?">
+<Question asking for missing information OR next step>
 
 JSON_START
 {
@@ -235,6 +313,75 @@ Return ONLY true or false.
         return result.includes("true");
     };
 
+    const detectTemplateIntent = async (userMessage) => {
+
+        let result = "false";
+
+        const prompt = `
+Determine if the user message indicates that they want to generate or send an outreach message to the candidates.
+
+User message: "${userMessage}"
+
+Return ONLY true or false.
+`;
+
+        try {
+
+            await CHAT_AGENT_RESPONSE(
+                {
+                    userMessage: prompt,
+                    model: "llama-3.3-70b-versatile"
+                },
+                (chunk) => {
+                    result = chunk.toLowerCase();
+                }
+            );
+
+        } catch (err) {
+            console.error("template intent detection failed", err);
+        }
+
+        return result.includes("true");
+    };
+
+    const detectTemplateEdit = async (userMessage) => {
+
+        let result = "false";
+
+        const prompt = `
+Determine if the user message asks to MODIFY an existing email template.
+
+Examples:
+- change subject
+- make it shorter
+- add salary
+- rewrite professionally
+- remove a line
+
+User message: "${userMessage}"
+
+Return ONLY true or false.
+`;
+
+        try {
+
+            await CHAT_AGENT_RESPONSE(
+                {
+                    userMessage: prompt,
+                    model: "llama-3.3-70b-versatile"
+                },
+                (chunk) => {
+                    result = chunk.toLowerCase();
+                }
+            );
+
+        } catch (err) {
+            console.error("Template edit detection failed", err);
+        }
+
+        return result.includes("true");
+    };
+
     const sendMessage = async (message, model = selectedModel) => {
 
         if (isPaused) {
@@ -290,6 +437,63 @@ Return ONLY true or false.
             }
         }
 
+        if (recruiterPhase === "OUTREACH_TEMPLATE") {
+
+            const wantsEdit = await detectTemplateEdit(message);
+
+            if (wantsEdit) {
+
+                let updatedTemplate = "";
+
+                try {
+
+                    await CHAT_AGENT_RESPONSE(
+                        {
+                            userMessage: `
+Modify the following recruiter outreach email based on the user's request.
+
+Current Template:
+${outreachTemplate}
+
+User Request:
+${message}
+
+Rules:
+- Keep placeholders like {FullName}
+- Maintain professional recruiter tone
+- Return the full updated email
+`,
+                            model: model?.name ?? "llama-3.3-70b-versatile"
+                        },
+                        (chunk) => {
+                            updatedTemplate = chunk;
+                        }
+                    );
+
+                } catch {
+                    updatedTemplate = outreachTemplate;
+                }
+
+                setOutreachTemplate(updatedTemplate);
+
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        id: `bot-${Date.now()}`,
+                        text: `${updatedTemplate}
+
+Would you like to use this template or make further changes?`,
+                        isUser: false,
+                        timestamp: Date.now(),
+                        isNew: true
+                    }
+                ]);
+
+                setIsGenerating(false);
+                return;
+            }
+        }
+
         // ---- OUTREACH CHANNEL HANDLER ----
         if (recruiterPhase === "OUTREACH_CHANNEL") {
 
@@ -300,36 +504,37 @@ Return ONLY true or false.
             if (lower.includes("email")) {
 
                 prompt = `
-Generate a professional recruiter outreach EMAIL.
+Generate a professional recruiter outreach email.
 
 Job Title: ${jobData.jobTitle}
-Experience: ${jobData.minExp}-${jobData.maxExp} years
+Experience: ${jobData.minExp}-${jobData.maxExp}
 Location: ${jobData.location}
 Skills: ${jobData.skills.join(", ")}
 
 IMPORTANT RULES:
-1. Use placeholder variables inside curly brackets.
-2. DO NOT use square brackets.
-3. Example placeholders:
-   {CandidateName}
-   {RecruiterName}
-   {CompanyName}
-   {ContactInformation}
 
-Write a short friendly email inviting the candidate to discuss the opportunity.
-`;
+You may ONLY use these placeholders:
 
-            } else if (lower.includes("text") || lower.includes("sms")) {
+{FirstName}
+{LastName}
+{FullName}
+{Company}
+{JobTitle}
+{Location}
+{RecruiterName}
+{RecruiterTitle}
 
-                prompt = `
-Generate a short recruiter outreach TEXT MESSAGE.
+Do NOT create any other placeholders.
 
-Job Title: ${jobData.jobTitle}
-Experience: ${jobData.minExp}-${jobData.maxExp} years
-Location: ${jobData.location}
-Skills: ${jobData.skills.join(", ")}
+For example DO NOT generate:
+{CandidateName}
+{NumberOfYears}
+{YourName}
+{Email}
 
-Write a concise SMS inviting the candidate to discuss the opportunity.
+Use only the allowed placeholders.
+
+Write a short friendly recruiter email inviting the candidate for a discussion.
 `;
             }
 
@@ -455,6 +660,85 @@ Is this outreach template okay? You can confirm or ask me to modify it.`,
             }
         }
 
+        // If candidates are already shown and user wants template → generate template directly
+        if (recruiterPhase === "OUTREACH_CHANNEL") {
+
+            const lower = message.toLowerCase();
+
+            const wantsTemplate = await detectTemplateIntent(message);
+            if (wantsTemplate) {
+
+                setRecruiterPhase("OUTREACH_TEMPLATE");
+
+                let template = "";
+
+                try {
+
+                    await CHAT_AGENT_RESPONSE(
+                        {
+                            userMessage: `
+Generate a professional recruiter outreach email.
+
+Job Title: ${jobData.jobTitle}
+Experience: ${jobData.minExp}-${jobData.maxExp}
+Location: ${jobData.location}
+Skills: ${jobData.skills.join(", ")}
+
+IMPORTANT RULES:
+
+You may ONLY use these placeholders:
+
+{FirstName}
+{LastName}
+{FullName}
+{Company}
+{JobTitle}
+{Location}
+{RecruiterName}
+{RecruiterTitle}
+
+Do NOT create any other placeholders.
+
+DO NOT generate:
+{CandidateName}
+{NumberOfYears}
+{YourName}
+
+Write a short recruiter outreach email inviting the candidate for a discussion.
+`,
+                            model: model?.name ?? "llama-3.3-70b-versatile",
+                            chatType: chatParam.chatType
+                        },
+                        (chunk) => {
+                            template = chunk;
+                        }
+                    );
+
+                } catch {
+                    template = "⚠️ Failed to generate template.";
+                }
+
+                setOutreachTemplate(template);
+                setAwaitingTemplateConfirmation(true);
+
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        id: `bot-${Date.now()}`,
+                        text: `${template}
+
+Is this outreach template okay? You can confirm or ask me to modify it.`,
+                        isUser: false,
+                        timestamp: Date.now(),
+                        isNew: true
+                    }
+                ]);
+
+                setIsGenerating(false);
+                return;
+            }
+        }
+
         let assistantMessageText = "";
 
         try {
@@ -545,13 +829,6 @@ Is this outreach template okay? You can confirm or ask me to modify it.`,
                                 timestamp: Date.now(),
                                 isNew: true,
                                 candidates: top5
-                            },
-                            {
-                                id: `bot-${Date.now()}-outreach`,
-                                text: `📩 How would you like to reach out to these candidates?\n\n1️⃣ Email\n2️⃣ Text Message`,
-                                isUser: false,
-                                timestamp: Date.now(),
-                                isNew: true
                             }
                         ]);
 
@@ -560,8 +837,56 @@ Is this outreach template okay? You can confirm or ask me to modify it.`,
                         console.error("Candidate search failed", err);
                     }
 
+                    // Ask LLM to suggest outreach
+                    let outreachQuestion = "";
+
+                    try {
+
+                        await CHAT_AGENT_RESPONSE(
+                            {
+                                userMessage: `
+Candidates matching the job were found.
+
+Ask the recruiter two things in a natural conversational way:
+
+1. First check if the candidates look suitable or good.
+2. Then suggest that you can generate an outreach email template to contact them.
+
+Rules:
+- Combine both ideas into one short conversational message.
+- Do NOT include job details.
+- Do NOT include JSON.
+- Do NOT repeat candidate search information.
+- Do NOT use fixed wording.
+
+Example styles (do NOT copy exactly):
+- "Do these candidates look good to you? I can also draft an outreach email template to contact them."
+- "Are these candidates a good fit? If you'd like, I can generate an email template to reach out to them."
+`,
+                                model: model?.name ?? "llama-3.3-70b-versatile",
+                                chatType: chatParam.chatType
+                            },
+                            (chunk) => {
+                                outreachQuestion = chunk;
+                            }
+                        );
+
+                    } catch (err) {
+                        outreachQuestion = "These candidates look promising. Would you like me to generate an outreach email template?";
+                    }
+
+                    setMessages(prev => [
+                        ...prev,
+                        {
+                            id: `bot-${Date.now()}-outreach`,
+                            text: outreachQuestion,
+                            isUser: false,
+                            timestamp: Date.now(),
+                            isNew: true
+                        }
+                    ]);
                     setIsGenerating(false);
-                    return;
+                    return; // ✅ correct place
                 }
             }
 
@@ -678,7 +1003,11 @@ Is this outreach template okay? You can confirm or ask me to modify it.`,
                 showCandidatePanel,
                 outreachTemplate,
                 showTemplatePanel,
-                jobData
+                jobData,
+                setShowCandidatePanel,
+                setShowTemplatePanel,
+                jobData,
+                setJobData
             }}
         >
             {children}

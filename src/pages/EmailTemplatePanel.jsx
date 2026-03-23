@@ -1,115 +1,139 @@
 import { useState, useEffect } from "react";
 import { useChat } from "../components/context/ChatContext";
-import { FiMail, FiSave, FiRotateCcw } from "react-icons/fi";
+import { FiRotateCcw, FiEye, FiSave, FiMail } from "react-icons/fi";
 
 const EmailTemplatePanel = () => {
-    const { outreachTemplate } = useChat();
+    const { outreachTemplate, jobData, setJobData } = useChat();
 
     const [subject, setSubject] = useState("");
     const [templateText, setTemplateText] = useState("");
 
+    // store original values
+    const [originalSubject, setOriginalSubject] = useState("");
+    const [originalTemplateText, setOriginalTemplateText] = useState("");
+    const [isPreview, setIsPreview] = useState(false);
+    const previewValues = {
+        "{FirstName}": jobData?.firstName || "",
+        "{LastName}": jobData?.lastName || "",
+        "{FullName}": jobData?.fullName || "",
+        "{Company}": jobData?.company || "",
+        "{JobTitle}": jobData?.jobTitle || "",
+        "{Location}": jobData?.location || "",
+        "{RecruiterName}": jobData?.recruiterName || "",
+        "{RecruiterTitle}": jobData?.recruiterTitle || ""
+    };
+
+    const applyPreview = (text) => {
+        if (!text) return "";
+
+        let result = text;
+
+        Object.entries(previewValues).forEach(([tag, value]) => {
+            const regex = new RegExp(tag.replace(/[{}]/g, "\\$&"), "g");
+            result = result.replace(regex, value);
+        });
+
+        return result;
+    };
+
+    const previewSubject = applyPreview(subject);
+    const previewBody = applyPreview(templateText);
+
     useEffect(() => {
         if (!outreachTemplate) return;
 
-        let body = outreachTemplate;
-        let extractedSubject = "";
-
-        // Extract Subject from template
         const subjectMatch = outreachTemplate.match(/subject\s*[:\-]\s*(.*)/i);
+        const body = outreachTemplate.replace(/subject\s*[:\-]\s*.*\n?/i, "").trim();
 
-        if (subjectMatch) {
-            extractedSubject = subjectMatch[1].trim();
+        const parsedSubject = subjectMatch ? subjectMatch[1].trim() : "";
 
-            // Remove subject line from body
-            body = outreachTemplate.replace(/subject\s*[:\-]\s*.*\n?/i, "").trim();
-        }
-
-        setSubject(extractedSubject);
+        setSubject(parsedSubject);
         setTemplateText(body);
+
+        // save original values
+        setOriginalSubject(parsedSubject);
+        setOriginalTemplateText(body);
 
     }, [outreachTemplate]);
 
     const handleReset = () => {
-        if (!outreachTemplate) return;
-
-        let body = outreachTemplate;
-        let extractedSubject = "";
-
-        const subjectMatch = outreachTemplate.match(/subject\s*[:\-]\s*(.*)/i);
-
-        if (subjectMatch) {
-            extractedSubject = subjectMatch[1].trim();
-            body = outreachTemplate.replace(/subject\s*[:\-]\s*.*\n?/i, "").trim();
-        }
-
-        setSubject(extractedSubject);
-        setTemplateText(body);
+        setSubject(originalSubject);
+        setTemplateText(originalTemplateText);
     };
 
     return (
-        <div className="h-full flex flex-col bg-white">
+        <div className="h-full flex flex-col bg-[#F8F9FA] font-sans antialiased">
 
-            {/* HEADER */}
-            <div className="flex items-center gap-2 px-6 py-4 ">
-                <FiMail className="text-blue-600" />
-                <h2 className="font-semibold text-gray-800">
-                    Email Template
-                </h2>
-            </div>
-
-            {/* EDITOR */}
-            <div className="flex flex-col flex-grow p-6 gap-6">
-
-                {/* SUBJECT */}
-                <div>
-                    <label className="text-sm text-gray-500 mb-2 block">
-                        Subject
-                    </label>
-
-                    <input
-                        value={subject}
-                        onChange={(e) => setSubject(e.target.value)}
-                        className="w-full border rounded-md px-3 py-2 text-sm outline-none "
-                        placeholder="Enter email subject..."
-                    />
+            <header className="flex items-center justify-between px-4 py-4 bg-white border-b border-gray-200/60 z-10">
+                <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+                        <FiMail className="text-white" size={13} />
+                    </div>
+                    <h2 className="text-sm font-bold text-gray-800 tracking-tight">
+                        Email Template
+                    </h2>
                 </div>
+            </header>
 
-                {/* BODY */}
-                <div className="flex flex-col flex-grow">
-                    <label className="text-sm text-gray-500 mb-2">
-                        Email Body
-                    </label>
+            <main className="flex-grow overflow-y-auto p-6 md:p-5 flex flex-col items-center">
 
-                    <textarea
-                        value={templateText}
-                        onChange={(e) => setTemplateText(e.target.value)}
-                        className="flex-grow w-full resize-none outline-none text-sm leading-relaxed border rounded-md p-3 "
-                        placeholder="Write your outreach email..."
-                    />
+                <div className="w-full max-w-4xl bg-white min-h-[580px] rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col overflow-hidden">
+
+                    <div className="px-5 py-7 border-b border-gray-50 flex items-center gap-6 group transition-colors focus-within:bg-blue-50/30">
+                        <span className="text-xs font-bold text-gray-600 uppercase w-14">
+                            Subject
+                        </span>
+                        <input
+                            value={isPreview ? previewSubject : subject}
+                            onChange={(e) => setSubject(e.target.value)}
+                            disabled={isPreview}
+                            className="flex-grow text-xl font-semibold text-gray-800 outline-none border-none bg-transparent"
+                            placeholder="Enter subject line..."
+                        />
+                    </div>
+
+                    <div className="px-5 py-0 flex-grow">
+                        <textarea
+                            value={isPreview ? previewBody : templateText}
+                            onChange={(e) => setTemplateText(e.target.value)}
+                            disabled={isPreview}
+                            className="w-full h-full min-h-[400px] text-[16px] leading-[1.8] text-gray-600 outline-none border-none resize-none bg-transparent"
+                            placeholder="Write your message here..."
+                        />
+                    </div>
                 </div>
+            </main>
 
-            </div>
-
-            {/* FOOTER */}
-            <div className="flex justify-end gap-3 px-6 py-4">
+            <footer className="px-6 py-2 bg-white border-t border-gray-200 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.03)] z-10">
 
                 <button
                     onClick={handleReset}
-                    className="flex items-center gap-2 px-3 py-2 text-sm border rounded-md hover:bg-gray-50"
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
                 >
-                    <FiRotateCcw />
+                    <FiRotateCcw size={15} />
                     Reset
                 </button>
 
-                <button
-                    className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                    <FiSave />
-                    Save
-                </button>
+                <div className="flex items-center gap-3">
+                    {/* <button className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all active:scale-95">
+                        <FiEye size={15} />
+                        Preview
+                    </button> */}
 
-            </div>
+                    <button className="flex items-center gap-2 px-6 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg shadow-blue-200 transition-all active:scale-95">
+                        <FiSave size={15} />
+                        Save
+                    </button>
+                    <button
+                        onClick={() => setIsPreview(!isPreview)}
+                        className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all active:scale-95"
+                    >
+                        <FiEye size={15} />
+                        {isPreview ? "Edit" : "Preview"}
+                    </button>
+                </div>
 
+            </footer>
         </div>
     );
 };

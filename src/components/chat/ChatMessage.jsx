@@ -66,7 +66,7 @@ const ChatMessage = ({ text, isUser, isNew, chatId, candidates }) => {
                 setIsGenerating(false);
                 setIsTypingDone(true);
             }
-        }, 5); // Adjust delay for word-by-word feel
+        }, 30); // Adjust delay for word-by-word feel
 
         return () => clearInterval(typingInterval);
     }, [text, isNew, isPaused, setIsGenerating]);
@@ -272,7 +272,7 @@ const ChatMessage = ({ text, isUser, isNew, chatId, candidates }) => {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`flex ${isUser ? "justify-end" : "justify-start"} mb-4 w-full text-gray-800 dark:text-black`}
+                className={`flex w-full px-6 py-4 ${isUser ? "justify-end" : "justify-start"}`}
             >
                 {isUser ? (
                     <div className={`flex items-center ${isEditing ? "w-full" : ""}`}>
@@ -299,8 +299,10 @@ const ChatMessage = ({ text, isUser, isNew, chatId, candidates }) => {
                                 </div>
                             </div>
                         ) : (
-                            <div className="bg-gray-50 text-white px-4 py-2 rounded-2xl rounded-br-md shadow-sm break-words whitespace-pre-wrap">
-                                {renderMarkdownContent()}
+                           <div className="flex justify-end w-full">
+                                <div className="bg-blue-300 text-white px-4 py-2 rounded-2xl text-[15px] max-w-md shadow-sm">
+                                    {renderMarkdownContent()}
+                                </div>
                             </div>
 
                         )}
@@ -315,46 +317,64 @@ const ChatMessage = ({ text, isUser, isNew, chatId, candidates }) => {
                     </div>
                 ) : (
                     <div>
-                        <div className="dark:bg-secondary w-fit rounded-lg px-4 py-1 dark:text-white">
+                        {/* <div className="dark:bg-secondary w-fit rounded-lg px-4 py-1 dark:text-white"> */}
 
+                        <div className="flex gap-3 w-full">
 
-                            {/* Message */}
-                            <div className="bg-gray-50 dark:bg-zinc-800 px-4 py-3 rounded-xl text-gray-800 dark:text-gray-100 shadow-sm max-w-full">
-                                {isGenerating
-                                    ? <div>{String(displayedText || "")}</div>
-                                    : renderMarkdownContent()}
+                            {/* Avatar */}
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 
+    flex items-center justify-center text-white text-xs font-semibold shrink-0 mt-1">
+                                AI
                             </div>
-                            {candidates && candidates.length > 0 && (
-                                <div className="mt-4 space-y-2">
 
-                                    {candidates.slice(0, 5).map((c, i) => (
-                                        <div
-                                            key={i}
-                                            className="flex items-center gap-3 border border-zinc-200 dark:border-zinc-700 rounded-lg p-3 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer"
-                                        >
+                            {/* Message Container */}
+                            <div className="flex flex-col w-full">
 
-                                            {/* Avatar */}
-                                            <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-semibold">
-                                                {c.name?.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                                            </div>
+                                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 
+rounded-2xl px-5 py-4 shadow-md">
 
-                                            {/* Candidate Info */}
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    {c.name}
-                                                </span>
-
-                                                <span className="text-xs text-gray-500">
-                                                    {c.title}
-                                                </span>
-                                            </div>
-
-                                        </div>
-                                    ))}
+                                    <div className="text-gray-800 dark:text-gray-100 text-[15px] leading-relaxed">
+                                        {isGenerating
+                                            ? <div>{String(displayedText || "")}</div>
+                                            : renderMarkdownContent()}
+                                    </div>
 
                                 </div>
-                            )}
+
+                            </div>
+
                         </div>
+                        {candidates && candidates.length > 0 && (
+                            <div className="mt-4 space-y-2">
+
+                                {candidates.slice(0, 5).map((c, i) => (
+                                    <div
+                                        key={i}
+                                        className="flex items-center gap-3 border border-zinc-200 dark:border-zinc-700 rounded-lg p-3 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition cursor-pointer"
+                                    >
+
+                                        {/* Avatar */}
+                                        <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-semibold">
+                                            {c.name?.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                                        </div>
+
+                                        {/* Candidate Info */}
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                {c.name}
+                                            </span>
+
+                                            <span className="text-xs text-gray-500">
+                                                {c.title}
+                                            </span>
+                                        </div>
+
+                                    </div>
+                                ))}
+
+                            </div>
+                        )}
+                        {/* </div> */}
 
                         {/* Related Questions List */}
                         {isFinishedTyping && !isUser && (

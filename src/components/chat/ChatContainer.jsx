@@ -96,9 +96,9 @@ const ChatContainer = () => {
         <div className="relative w-full">
             <div
                 ref={containerRef}
-                className={`w-full overflow-y-auto overflow-x-hidden pt-3 ${messages.length === 0 ? "h-20" : "h-[calc(100dvh-15rem)]"}`}
+                className={`w-full overflow-y-auto overflow-x-hidden pt-6 px-4 ${messages.length === 0 ? "h-20" : "h-[calc(100dvh-9rem)]"}`}
             >
-                <div className="mx-auto max-w-3xl">
+                <div className="mx-auto w-full max-w-3xl px-4 flex flex-col gap-2 pb-32">
                     {messages.length === 0 ? (
                         <h1 className="text-center text-2xl font-semibold md:text-4xl text-gray-800 dark:text-gray-300">
                             Hi! Feel free to ask.
