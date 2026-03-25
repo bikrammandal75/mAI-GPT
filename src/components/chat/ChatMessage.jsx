@@ -272,7 +272,7 @@ const ChatMessage = ({ text, isUser, isNew, chatId, candidates }) => {
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`flex w-full px-6 py-4 ${isUser ? "justify-end" : "justify-start"}`}
+                className={`flex w-full px-6 py-3 ${isUser ? "justify-end" : "justify-start"}`}
             >
                 {isUser ? (
                     <div className={`flex items-center ${isEditing ? "w-full" : ""}`}>

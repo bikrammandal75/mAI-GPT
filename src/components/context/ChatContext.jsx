@@ -37,7 +37,7 @@ export const ChatProvider = ({ children }) => {
     const [showTemplatePanel, setShowTemplatePanel] = useState(false);
     const [awaitingTemplateConfirmation, setAwaitingTemplateConfirmation] = useState(false);
 
-    
+
 
     const togglePause = () => setIsPaused((prev) => !prev);
 
@@ -439,8 +439,32 @@ Return ONLY true or false.
 
         if (recruiterPhase === "OUTREACH_TEMPLATE") {
 
+            const confirmed = await detectConfirmation(message);
             const wantsEdit = await detectTemplateEdit(message);
 
+            // ✅ USER CONFIRMS TEMPLATE
+            if (confirmed) {
+
+                setShowTemplatePanel(true);
+                setShowCandidatePanel(false);
+                setAwaitingTemplateConfirmation(false);
+
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        id: `bot-${Date.now()}`,
+                        text: "✅ Great! I'll proceed with this outreach template.",
+                        isUser: false,
+                        timestamp: Date.now(),
+                        isNew: true
+                    }
+                ]);
+
+                setIsGenerating(false);
+                return;
+            }
+
+            // ✏️ USER WANTS TO MODIFY TEMPLATE
             if (wantsEdit) {
 
                 let updatedTemplate = "";
@@ -483,94 +507,6 @@ Rules:
                         text: `${updatedTemplate}
 
 Would you like to use this template or make further changes?`,
-                        isUser: false,
-                        timestamp: Date.now(),
-                        isNew: true
-                    }
-                ]);
-
-                setIsGenerating(false);
-                return;
-            }
-        }
-
-        // ---- OUTREACH CHANNEL HANDLER ----
-        if (recruiterPhase === "OUTREACH_CHANNEL") {
-
-            const lower = message.toLowerCase();
-
-            let prompt = "";
-
-            if (lower.includes("email")) {
-
-                prompt = `
-Generate a professional recruiter outreach email.
-
-Job Title: ${jobData.jobTitle}
-Experience: ${jobData.minExp}-${jobData.maxExp}
-Location: ${jobData.location}
-Skills: ${jobData.skills.join(", ")}
-
-IMPORTANT RULES:
-
-You may ONLY use these placeholders:
-
-{FirstName}
-{LastName}
-{FullName}
-{Company}
-{JobTitle}
-{Location}
-{RecruiterName}
-{RecruiterTitle}
-
-Do NOT create any other placeholders.
-
-For example DO NOT generate:
-{CandidateName}
-{NumberOfYears}
-{YourName}
-{Email}
-
-Use only the allowed placeholders.
-
-Write a short friendly recruiter email inviting the candidate for a discussion.
-`;
-            }
-
-            if (prompt) {
-
-                setRecruiterPhase("OUTREACH_TEMPLATE");
-
-                let template = "";
-
-                try {
-
-                    await CHAT_AGENT_RESPONSE(
-                        {
-                            userMessage: prompt,
-                            model: model?.name ?? "llama-3.3-70b-versatile",
-                            chatType: chatParam.chatType
-                        },
-                        (chunk) => {
-                            template = chunk;
-                        }
-                    );
-
-                } catch (err) {
-                    template = "⚠️ Failed to generate outreach template.";
-                }
-
-                setOutreachTemplate(template);
-                setAwaitingTemplateConfirmation(true);
-
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        id: `bot-${Date.now()}`,
-                        text: `${template}
-
-Is this outreach template okay? You can confirm or ask me to modify it.`,
                         isUser: false,
                         timestamp: Date.now(),
                         isNew: true
@@ -665,8 +601,10 @@ Is this outreach template okay? You can confirm or ask me to modify it.`,
 
             const lower = message.toLowerCase();
 
+            const confirmed = await detectConfirmation(message);
             const wantsTemplate = await detectTemplateIntent(message);
-            if (wantsTemplate) {
+
+            if (confirmed || wantsTemplate) {
 
                 setRecruiterPhase("OUTREACH_TEMPLATE");
 
@@ -800,11 +738,20 @@ Is this outreach template okay? You can confirm or ask me to modify it.`,
                     skills: parsed.skills?.length ? parsed.skills : jobData.skills
                 };
 
-                const confirmSearch = parsed.confirmSearch || false;
+                let confirmSearch = parsed.confirmSearch || false;
+
+                // if job is already complete but LLM didn't mark confirmSearch,
+                // check user intent manually
+                if (!confirmSearch && isJobComplete(updatedJob)) {
+                    const userApproved = await detectConfirmation(message);
+                    if (userApproved) {
+                        confirmSearch = true;
+                    }
+                }
 
                 setJobData(updatedJob);
 
-                if (isJobComplete(updatedJob) && confirmSearch) {
+                if (recruiterPhase === "JOB_COLLECTION" && isJobComplete(updatedJob) && confirmSearch) {
 
                     try {
 
