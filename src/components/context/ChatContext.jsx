@@ -626,14 +626,14 @@ IMPORTANT RULES:
 
 You may ONLY use these placeholders:
 
-{FirstName}
-{LastName}
-{FullName}
+{First Name}
+{Last Name}
+{Full Name}
 {Company}
-{JobTitle}
+{Job Title}
 {Location}
-{RecruiterName}
-{RecruiterTitle}
+{Recruiter Name}
+{Recruiter Title}
 
 Do NOT create any other placeholders.
 
@@ -658,6 +658,8 @@ Write a short recruiter outreach email inviting the candidate for a discussion.
 
                 setOutreachTemplate(template);
                 setAwaitingTemplateConfirmation(true);
+                setShowTemplatePanel(true);
+                setShowCandidatePanel(false);
 
                 setMessages(prev => [
                     ...prev,

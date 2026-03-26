@@ -13,14 +13,14 @@ const EmailTemplatePanel = () => {
     const [originalTemplateText, setOriginalTemplateText] = useState("");
     const [isPreview, setIsPreview] = useState(false);
     const previewValues = {
-        "{FirstName}": jobData?.firstName || "",
-        "{LastName}": jobData?.lastName || "",
-        "{FullName}": jobData?.fullName || "",
-        "{Company}": jobData?.company || "",
-        "{JobTitle}": jobData?.jobTitle || "",
-        "{Location}": jobData?.location || "",
-        "{RecruiterName}": jobData?.recruiterName || "",
-        "{RecruiterTitle}": jobData?.recruiterTitle || ""
+        "{First Name}": jobData?.firstName || "Michael",
+        "{Last Name}": jobData?.lastName || "Johnson",
+        "{Full Name}": jobData?.fullName || "Michael Johnson",
+        "{Company}": jobData?.company || "Mandal Solutions",
+        "{Job Title}": jobData?.jobTitle || "Senior Software Engineer",
+        "{Location}": jobData?.location || "San Francisco, CA",
+        "{Recruiter Name}": jobData?.recruiterName || "Emily Davis",
+        "{Recruiter Title}": jobData?.recruiterTitle || "Lead Technical Recruiter"
     };
 
     const applyPreview = (text) => {
@@ -80,14 +80,14 @@ const EmailTemplatePanel = () => {
                 <div className="w-full max-w-4xl bg-white min-h-[580px] rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-100 flex flex-col overflow-hidden">
 
                     <div className="px-5 py-7 border-b border-gray-50 flex items-center gap-6 group transition-colors focus-within:bg-blue-50/30">
-                        <span className="text-xs font-bold text-gray-600 uppercase w-14">
+                        <span className="text-[16px] font-bold text-gray-800 uppercase w-14">
                             Subject
                         </span>
                         <input
                             value={isPreview ? previewSubject : subject}
                             onChange={(e) => setSubject(e.target.value)}
                             disabled={isPreview}
-                            className="flex-grow text-xl font-semibold text-gray-800 outline-none border-none bg-transparent"
+                            className="flex-grow text-[16px] font-bold text-gray-800 outline-none border-none bg-transparent"
                             placeholder="Enter subject line..."
                         />
                     </div>
@@ -97,7 +97,7 @@ const EmailTemplatePanel = () => {
                             value={isPreview ? previewBody : templateText}
                             onChange={(e) => setTemplateText(e.target.value)}
                             disabled={isPreview}
-                            className="w-full h-full min-h-[400px] text-[16px] leading-[1.8] text-gray-600 outline-none border-none resize-none bg-transparent"
+                            className="w-full h-full min-h-[400px] text-[16px] leading-[1.8] text-gray-800 outline-none border-none resize-none bg-transparent"
                             placeholder="Write your message here..."
                         />
                     </div>
