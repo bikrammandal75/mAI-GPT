@@ -483,7 +483,7 @@ User Request:
 ${message}
 
 Rules:
-- Keep placeholders like {FullName}
+- Keep placeholders like {Full Name}
 - Maintain professional recruiter tone
 - Return the full updated email
 `,

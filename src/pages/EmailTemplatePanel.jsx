@@ -30,7 +30,12 @@ const EmailTemplatePanel = () => {
 
         Object.entries(previewValues).forEach(([tag, value]) => {
             const regex = new RegExp(tag.replace(/[{}]/g, "\\$&"), "g");
-            result = result.replace(regex, value);
+
+            if (isPreview) {
+                result = result.replace(regex, `<strong>${value}</strong>`);
+            } else {
+                result = result.replace(regex, value);
+            }
         });
 
         return result;
@@ -83,23 +88,35 @@ const EmailTemplatePanel = () => {
                         <span className="text-[16px] font-bold text-gray-800 uppercase w-14">
                             Subject
                         </span>
-                        <input
-                            value={isPreview ? previewSubject : subject}
-                            onChange={(e) => setSubject(e.target.value)}
-                            disabled={isPreview}
-                            className="flex-grow text-[16px] font-bold text-gray-800 outline-none border-none bg-transparent"
-                            placeholder="Enter subject line..."
-                        />
+                        {isPreview ? (
+                            <div
+                                className="flex-grow text-[16px] font-bold text-gray-800"
+                                dangerouslySetInnerHTML={{ __html: previewSubject }}
+                            />
+                        ) : (
+                            <input
+                                value={subject}
+                                onChange={(e) => setSubject(e.target.value)}
+                                className="flex-grow text-[16px] font-bold text-gray-800 outline-none border-none bg-transparent"
+                                placeholder="Enter subject line..."
+                            />
+                        )}
                     </div>
 
                     <div className="px-5 py-0 flex-grow">
-                        <textarea
-                            value={isPreview ? previewBody : templateText}
-                            onChange={(e) => setTemplateText(e.target.value)}
-                            disabled={isPreview}
-                            className="w-full h-full min-h-[400px] text-[16px] leading-[1.8] text-gray-800 outline-none border-none resize-none bg-transparent"
-                            placeholder="Write your message here..."
-                        />
+                        {isPreview ? (
+                            <div
+                                className="w-full h-full min-h-[400px] text-[16px] leading-[1.8] text-gray-800 bg-transparent whitespace-pre-wrap"
+                                dangerouslySetInnerHTML={{ __html: previewBody }}
+                            />
+                        ) : (
+                            <textarea
+                                value={templateText}
+                                onChange={(e) => setTemplateText(e.target.value)}
+                                className="w-full h-full min-h-[400px] text-[16px] leading-[1.8] text-gray-800 outline-none border-none resize-none bg-transparent"
+                                placeholder="Write your message here..."
+                            />
+                        )}
                     </div>
                 </div>
             </main>
